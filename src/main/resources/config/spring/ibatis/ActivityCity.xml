@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ActivityDao">
+
+    <select id="getActivityCityId" resultClass="int">
+		SELECT
+		CityID
+		FROM
+		GPA_ActivityBackCity
+		where CityID = #cityid#
+	</select>
+
+    <select id="getActivityCityIdCount" resultClass="int">
+        SELECT
+        count(1)
+        FROM
+        GPA_ActivityBackCity
+        where
+        <![CDATA[
+        AddTime<= NOW()
+        ]]>
+        <isNotEmpty property="status" prepend="and">
+            Status =#status#
+        </isNotEmpty>
+        AND
+        CityID
+        IN
+        <iterate property="cityids" open="(" close=")" conjunction=",">
+            #cityids[]#
+        </iterate>
+
+    </select>
+
+    <select id="getActivityCityIdForObject" resultClass="int">
+        SELECT
+        CityID
+        FROM
+        GPA_ActivityBackCity
+        where CityID = #cityid#
+    </select>
+
+    <select id="getAllActivityCityId" resultClass="int">
+		SELECT
+		CityID
+		FROM
+		GPA_ActivityBackCity
+	</select>
+
+    <insert id="addActivityBackCity">
+		insert into GPA_ActivityBackCity(
+		CityID,
+		CityName,
+		Status,
+		AddTime,
+		UpdateTime)
+		values(#CityID#,
+		#CityName#,
+		#Status#,
+		NOW(),
+		NOW())
+	</insert>
+
+    <update id="updateActivityBackCity">
+		update GPA_ActivityBackCity
+		set CityName =#CityName#,
+		updateTime = NOW()
+		where
+		CityID = #CityID#
+	</update>
+
+    <delete id="deleteActivityBackCity">
+		delete from GPA_ActivityBackCity
+		where
+		CityID =
+		#CityID#
+	</delete>
+
+    <select id="pageOfflineActivityUserHis" resultClass="int">
+		SELECT
+		ID
+		FROM
+		GPA_OfflineActivityUserHis
+		 <![CDATA[ where AddTime <#AddTime# and ID < #ID#
+
+
+
+
+
+
+
+
+
+        ]]>
+    </select>
+
+    <select id="pageOfflineActivityUserHis_count" resultClass="int">
+		SELECT
+		count(1)
+		FROM
+		GPA_OfflineActivityUserHis
+		<![CDATA[ where AddTime <#AddTime# and ID < #ID#
+
+
+
+
+
+
+
+
+
+        ]]>
+    </select>
+
+    <select id="getOfflineActivityUser" resultClass="int">
+	    /*{"routes":[{"db_rule":"?ID?%2","table_rule":"?ID?%2"}],"table_prefix":"GPA_OfflineActivityUser","index_prefix":"ix_index_id"}*/
+		SELECT
+		ID
+		FROM
+		GPA_OfflineActivityUser
+		<![CDATA[ where ID = #ID# ]]>
+		limit #pageNo#,#pageSize#
+	</select>
+
+    <select id="getOfflineActivityUsersByIds" parameterClass="map" resultClass="int">
+        /*{"routes":[{"db_rule":"?ids?%2","table_rule":"?ids?%2"}],"table_prefix":"GPA_OfflineActivityUser","index_prefix":"ix_index_id"，"multiple"
+        :true}*/
+        SELECT
+        ID
+        FROM
+        GPA_OfflineActivityUser
+        WHERE
+        ID IN
+        <iterate property="ids" open="(" close=")" conjunction=",">
+            #ids[]#
+        </iterate>
+    </select>
+
+    <select id="testIn" parameterClass="map" resultClass="int">
+        SELECT
+        count(1)
+        FROM
+        auth_depart
+        WHERE
+        ID IN
+        <iterate property="ids" open="(" close=")" conjunction=",">
+            #ids[]#
+        </iterate>
+    </select>
+
+</sqlMap>
