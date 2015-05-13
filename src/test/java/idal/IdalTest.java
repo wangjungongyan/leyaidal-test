@@ -7,8 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //1、监控集群状态
 //
@@ -27,18 +28,124 @@ public class IdalTest {
 
     @Test
     public void queryWithParameters() {
-        //        int cityid = 1;
-        //        List<Integer> cityIds = activityDao.getActivityCityId(cityid);
-        List<Integer> ids = new ArrayList<Integer>();
-        ids.add(1);
-        ids.add(2);
+        List<Map> codeAddresses = activityDao.queryAllCodeAddress();
+        List<Map> geographyAreas = activityDao.queryAllGeographyArea();
 
-        int status = 0;
+        Map<String, Object> commonCities = new HashMap<String, Object>();
 
-        int city = activityDao.getActivityCityIdCount(ids, status);
-        System.out.print("size:" + city);
+        for (Map geographyArea : geographyAreas) {
+            String province = (String) geographyArea.get("Province");
+            String city = (String) geographyArea.get("City");
+            String district = (String) geographyArea.get("District");
+            int id = (Integer) geographyArea.get("ID");
 
-        //assertEquals(1, cityIds.get(0).intValue());
+            if (city.startsWith("自治区直辖县级行政单位")) {
+                commonCities.put(
+                        province + "_" + district, id);
+            }
+
+            if (district.length() >= 2 && city.length() >= 2 && province != city) {
+                commonCities.put(
+                        province.substring(0, 2) + "_" + city.substring(0, 2) + "_" + district.substring(0, 2), id);
+            }
+
+            if ("".equals(city)) {
+                commonCities.put(province, id);
+            }
+
+            if ("".equals(district) || city.equals(district)) {
+                commonCities.put(province + "_" + city, id);
+            }
+
+            commonCities.put(province + "_" + city + "_" + district, id);
+        }
+
+        for (Map codeAddress : codeAddresses) {
+            Double originIdx = (Double) codeAddress.get("idx");
+            int idx = originIdx.intValue();
+            String sido = (String) codeAddress.get("sido");
+            String gugun = (String) codeAddress.get("gugun");
+            String dong = (String) codeAddress.get("dong");
+            int geography_Area_Id = 0;
+
+            if ("省直辖行政单位".equals(gugun)) {
+                if (sido.startsWith("新疆")) {
+                    sido = sido.substring(0, 2);
+                }
+
+                Object origin_geography_Area_Id = commonCities.get(sido + "_" + dong);
+                if (origin_geography_Area_Id == null) {
+                    continue;
+                }
+                geography_Area_Id = (Integer) origin_geography_Area_Id;
+                activityDao.updateCodeAddress(new Double(idx), geography_Area_Id);
+                continue;
+            }
+
+            if ("default".equals(dong)) {
+                String key = "";
+                if (sido.startsWith("新疆")) {
+                    key = "新疆_" + gugun;
+                } else if (sido.equals(gugun)) {
+                    key = sido;
+                } else {
+                    key = sido + "_" + gugun;
+                }
+
+                Object origin_geography_Area_Id = commonCities.get(key);
+                if (origin_geography_Area_Id == null) {
+                    continue;
+                }
+                geography_Area_Id = (Integer) origin_geography_Area_Id;
+                activityDao.updateCodeAddress(new Double(idx), geography_Area_Id);
+                continue;
+            }
+
+            if (("北京市".equals(sido) || "天津市".equals(sido) || "重庆市".equals(sido) || "上海市".equals(sido))) {
+                Object origin_geography_Area_Id = commonCities.get(sido + "_" + dong);
+                if (origin_geography_Area_Id == null) {
+                    continue;
+                }
+                geography_Area_Id = (Integer) origin_geography_Area_Id;
+                activityDao.updateCodeAddress(new Double(idx), geography_Area_Id);
+                continue;
+            } else {
+                Object origin_geography_Area_Id = commonCities.get(sido + "_" + gugun + "_" + dong);
+                if (origin_geography_Area_Id == null) {
+                    continue;
+                }
+
+                geography_Area_Id = (Integer) origin_geography_Area_Id;
+            }
+
+            System.out.println("idx:" + idx + ",geography_Area_Id:" + geography_Area_Id);
+
+            activityDao.updateCodeAddress(new Double(idx), geography_Area_Id);
+
+        }
+
+        List<Map> codeAddressWhereGeographyAreaIdIsZeros = activityDao.queryAllCodeAddressWhereGeographyAreaIdIsZero();
+        for (Map code : codeAddressWhereGeographyAreaIdIsZeros) {
+            Double originIdx = (Double) code.get("idx");
+            int idx = originIdx.intValue();
+            String sido = (String) code.get("sido");
+            String gugun = (String) code.get("gugun");
+            String dong = (String) code.get("dong");
+
+            if (!sido.equals(gugun)) {
+                String key = sido.substring(0, 2) + "_" +
+                             gugun.substring(0, 2) + "_" +
+                             dong.substring(0, 2);
+                Object origin_geography_Area_Id = commonCities.get(key);
+
+                if (origin_geography_Area_Id != null) {
+                    int geography_Area_Id = (Integer) origin_geography_Area_Id;
+                    activityDao.updateCodeAddress(new Double(idx), geography_Area_Id);
+                }
+
+            }
+        }
+
     }
     //
     //    @Test

@@ -8,6 +8,7 @@ import com.leya.idal.model.PageModel;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @NameSpace("ActivityDao")
 public interface ActivityDao {
@@ -56,5 +57,25 @@ public interface ActivityDao {
 
     @Action(action = ActionType.QUERY_OBJECT)
     public int testIn(@ParamName("ids") List<String> ids);
+
+    @Action(action = ActionType.QUERY_LIST)
+    public List<Map> queryAllCodeAddress();
+
+    @Action(action = ActionType.QUERY_LIST)
+    public List<Map> queryAllCodeAddressWhereGeographyAreaIdIsZero();
+
+    @Action(action = ActionType.QUERY_LIST)
+    public List<Map> queryAllGeographyArea();
+
+    @Action(action = ActionType.UPDATE)
+    public void updateCodeAddress(@ParamName("id")
+                                  double id, @ParamName("geography_Area_Id")
+                                  int geography_Area_Id);
+
+    @Action(action = ActionType.QUERY_LIST)
+    public int queryAllGeographyAreaByProvinceCityDistrict(@ParamName("province")
+                                                           String province, @ParamName("city")
+                                                           String city, @ParamName("district")
+                                                           String district);
 
 }
